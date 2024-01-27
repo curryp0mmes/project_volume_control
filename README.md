@@ -4,7 +4,7 @@ My current plan is building a hardware volume controller based on a motorized sl
 
 ## Hardware
 
-ESP32-C3 Mini [AliExpress](https://www.aliexpress.com/item/1005006334515931.html) [data sheet](https://ae01.alicdn.com/kf/S45a14239903a4132a32cc4ab52abfeadq.jpg) 
+ESP32-C3 Mini [AliExpress](https://www.aliexpress.com/item/1005006334515931.html) [data sheet](https://ae01.alicdn.com/kf/S45a14239903a4132a32cc4ab52abfeadq.jpg) [pinout](https://europe1.discourse-cdn.com/arduino/optimized/4X/9/2/f/92f1e8e2fcc888726ff7838dad725dd94f43438d_2_690x301.jpeg)
 
 TFT Screen [AliExpress](https://www.aliexpress.com/item/1005006368548507.html)
 > 1.3 inch \
@@ -30,3 +30,18 @@ SDA - GPIO8 / SDA \
 RES - GPIO4 / SCK \
 DC  - GPIO2 \
 BLK - not connected 
+
+Piezo is connected to GND and GPIO0 with a 100k resistor in parallel to prevent charge buildup 
+
+
+## Roadmap
+
+- [x] WiFi Connectivity
+- [x] Printing to TFT Screen
+- [ ] Connecting to Spotify API
+- [ ] Reading Potis
+- [ ] Talking to Motor of Slider
+- [ ] UI
+- [ ] Make it standalone with battery power
+- [ ] Design and printing 3d case
+- [ ] Full Construction

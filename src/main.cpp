@@ -1,5 +1,6 @@
 #include <TFT_eSPI.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 
 // ESP32C3 super mini setup
 //#define TFT_MISO 5
@@ -11,17 +12,61 @@
 //#define TFT_BL   10            // LED back-light control pi
 //#define TFT_BACKLIGHT_ON HIGH  // Level to turn ON back-light (HIGH or LOW)
 
+#include "SecretCredentials.h"
+
 unsigned long timePiezo;
 bool piezoToggle = false;
 int maxVal = 0;
 
 TFT_eSPI tft = TFT_eSPI();
 
+void printWifiStatus();
+
+void downloadImage() {
+  HTTPClient http;
+  http.begin("https://people.math.sc.edu/Burkardt/data/bmp/bmp_24.bmp"); //EXAMPLE image from internet
+  int httpCode = http.GET();
+  int size = http.getSize();
+  uint8_t buff[128];
+  if (httpCode == 200) {
+    WiFiClient* stream = http.getStreamPtr();
+    while(http.connected() && (size > 0 || size == -1)) {
+      size_t streamSize = stream->available();
+
+      if (streamSize) {
+        int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+        
+        if (size > 0) {
+          size -= c;
+        }
+      }
+      delay(1);
+    }
+    tft.pushImage(0,0,200,200,buff);
+  } else {
+    Serial.println("HTTP REQUEST ERROR OCCURED!");
+  }
+   http.end();
+
+}
+
+void printRandomWord() {
+  HTTPClient http;
+  http.begin("https://random-word-api.herokuapp.com/word");
+  int httpCode = http.GET();
+  int size = http.getSize();
+  uint8_t buff[128];
+  if (httpCode == 200) {
+    tft.println(http.getString());
+  }
+  http.end();
+}
+
 void displayWiFiScanResults() {
   int n = WiFi.scanNetworks();
 
   tft.fillScreen(TFT_BLACK);
-  tft.setTextSize(2);
+  tft.setTextSize(1);
   tft.setTextColor(TFT_WHITE);
   
   if (n == 0) {
@@ -45,6 +90,48 @@ void displayWiFiScanResults() {
     }
   }
   
+
+  
+}
+
+void connectToWifi() {
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_WHITE);
+
+  tft.print("Attempting to connect to SSID: ");
+  tft.println(WIFI_SSID);
+  
+  WiFi.useStaticBuffers(true);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  WiFi.setTxPower(WIFI_POWER_8_5dBm);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    tft.print(".");
+  }
+
+  tft.println("");
+  tft.println("Connected to WiFi");
+
+  printWifiStatus();
+}
+
+void printWifiStatus() {
+  // print the SSID of the network you're attached to:
+  tft.print("SSID: ");
+  tft.println(WiFi.SSID());
+
+  // print your board's IP address:
+  IPAddress ip = WiFi.localIP();
+  tft.print("IP Address: ");
+  tft.println(ip);
+
+  // print the received signal strength:
+  long rssi = WiFi.RSSI();
+  tft.print("signal strength (RSSI):");
+  tft.print(rssi);
+  tft.println(" dBm");
 }
 
 void setup(void) {
@@ -58,7 +145,7 @@ void setup(void) {
   tft.setRotation(0);
   tft.fillScreen(TFT_BLACK);
 
-  displayWiFiScanResults(); 
+  connectToWifi(); 
 }
 
 
@@ -73,6 +160,9 @@ void loop() {
     timePiezo = time;
     piezoToggle = !piezoToggle;
     tft.fillCircle(120, 180, 60, piezoToggle ? TFT_RED : TFT_GREEN);
+    
+    tft.setTextColor(random(TFT_WHITE));
+    printRandomWord();
   }
 
   

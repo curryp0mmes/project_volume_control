@@ -6,6 +6,10 @@ My current plan is building a hardware volume controller based on a motorized sl
 
 ESP32-C3 Mini [AliExpress](https://www.aliexpress.com/item/1005006334515931.html) [data sheet](https://ae01.alicdn.com/kf/S45a14239903a4132a32cc4ab52abfeadq.jpg) [pinout](https://europe1.discourse-cdn.com/arduino/optimized/4X/9/2/f/92f1e8e2fcc888726ff7838dad725dd94f43438d_2_690x301.jpeg)
 
+Slider Poti Motorized [AliExpress](https://www.aliexpress.com/item/1005006223166484.html)
+
+Motor Controller [AliExpress](https://www.aliexpress.com/item/33024774147.html)
+
 TFT Screen [AliExpress](https://www.aliexpress.com/item/1005006368548507.html)
 > 1.3 inch \
 > Display ModeNormally black IPS \
@@ -38,7 +42,7 @@ Poti - ESP \
 3 - GND \
 4 - GPIO1/ADC1
 
-Motor Controller for Poti Motor
+Motor Controller for Poti Motor \
 5V \
 GND \
 IN1 - GPIO3/A1 \

@@ -36,6 +36,9 @@ void Slider::power(bool on) {
 }
 
 void Slider::gotoPos(int pos) {
+    if(pos > 4096) pos = 4096;
+    if(pos < 100) pos = 100;
+    
     if(this->getVal() < pos) {
         
         analogWrite(pinMotor1, 255);

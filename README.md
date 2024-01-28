@@ -31,7 +31,19 @@ RES - GPIO4 / SCK \
 DC  - GPIO2 \
 BLK - not connected 
 
-Piezo is connected to GND and GPIO0 with a 100k resistor in parallel to prevent charge buildup 
+Piezo is connected to GND and GPIO0/ADC0 with a 100k resistor in parallel to prevent charge buildup 
+
+Poti - ESP \
+1 - GPIO21 \
+3 - GND \
+4 - GPIO1/ADC1
+
+Motor Controller for Poti Motor
+5V \
+GND \
+IN1 - GPIO3/A1 \
+IN2 - GPIO5/A3 
+
 
 
 ## Roadmap
@@ -39,8 +51,9 @@ Piezo is connected to GND and GPIO0 with a 100k resistor in parallel to prevent 
 - [x] WiFi Connectivity
 - [x] Printing to TFT Screen
 - [ ] Connecting to Spotify API
-- [ ] Reading Potis
-- [ ] Talking to Motor of Slider
+- [x] Reading Potis
+- [x] Talking to Motor of Slider
+- [ ] Proper PIDs
 - [ ] UI
 - [ ] Make it standalone with battery power
 - [ ] Design and printing 3d case

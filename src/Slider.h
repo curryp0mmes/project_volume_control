@@ -9,6 +9,7 @@ class Slider {
         void gotoPos(int val);
         void power(bool on = true);
         int getVal();
+        int getValFast();
     private:
         const int pinMotor1;
         const int pinMotor2;

@@ -38,20 +38,29 @@ void Slider::power(bool on) {
 void Slider::gotoPos(int pos) {
     if(pos > 4096) pos = 4096;
     if(pos < 100) pos = 100;
-    
+
     if(this->getVal() < pos) {
-        
         analogWrite(pinMotor1, 255);
-        while(this->getVal() < pos);
+        while(this->getValFast() < pos);
         analogWrite(pinMotor1, 0);
     }
     else {
       analogWrite(pinMotor2, 255);
-      while(this->getVal() > pos);
+      while(this->getValFast() > pos);
       analogWrite(pinMotor2, 0);
     }
 }
 
 int Slider::getVal() {
+    int sum = 0;
+
+    for(int i = 0; i < 500; i++) {
+        sum += analogRead(pinPotiVal);
+    }
+
+    return sum/500;
+}
+
+int Slider::getValFast() {
     return analogRead(pinPotiVal);
 }

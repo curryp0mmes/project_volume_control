@@ -65,6 +65,28 @@ bool SpotifyHandler::refreshAuth()
     return accessTokenSet;
 }
 
+int SpotifyHandler::getVolume() {
+    String url = "https://api.spotify.com/v1/me/player/currently-playing";
+    https.useHTTP10(true);
+    https.begin(url);
+    String auth = "Bearer " + String(accessToken);
+    https.addHeader("Authorization", auth);
+    int httpResponseCode = https.GET();
+    bool success = false;
+    String songId = "";
+    bool refresh = false;
+
+    // Check if the request was successful
+    if (httpResponseCode == HTTP_CODE_OK)
+    {
+        JsonObject response;
+        deserializeJson(response, https.getString());
+
+        return response["device"]["volume_percent"];
+    }
+    return -1;
+}
+
 bool SpotifyHandler::getTrackInfo()
 {
     String url = "https://api.spotify.com/v1/me/player/currently-playing";
@@ -76,10 +98,13 @@ bool SpotifyHandler::getTrackInfo()
     bool success = false;
     String songId = "";
     bool refresh = false;
+
     // Check if the request was successful
     if (httpResponseCode == HTTP_CODE_OK)
     {
         //
+        
+
 
         String currentSongProgress = getValue(https, "progress_ms");
         currentSongPositionMs = currentSongProgress.toFloat();
@@ -263,6 +288,7 @@ bool SpotifyHandler::togglePlay()
     https.begin(url);
     String auth = "Bearer " + String(accessToken);
     https.addHeader("Authorization", auth);
+    https.addHeader("Content-length", "0");
     int httpResponseCode = https.PUT("");
     bool success = false;
     // Check if the request was successful
@@ -288,10 +314,13 @@ bool SpotifyHandler::togglePlay()
 
 bool SpotifyHandler::adjustVolume(int vol)
 {
+    if(!accessTokenSet) return false;
+
     String url = "https://api.spotify.com/v1/me/player/volume?volume_percent=" + String(vol);
     https.begin(url);
     String auth = "Bearer " + String(accessToken);
     https.addHeader("Authorization", auth);
+    https.addHeader("Content-length", "0");
     int httpResponseCode = https.PUT("");
     bool success = false;
     // Check if the request was successful
@@ -315,7 +344,8 @@ bool SpotifyHandler::adjustVolume(int vol)
         tft.print("Error setting volume: ");
         tft.println(httpResponseCode);
         String response = https.getString();
-        tft.println(response);
+        tft.println(response); 
+        tft.println(url);
     }
 
     // Disconnect from the Spotify API
@@ -329,6 +359,7 @@ bool SpotifyHandler::skipForward()
     https.begin(url);
     String auth = "Bearer " + String(accessToken);
     https.addHeader("Authorization", auth);
+    https.addHeader("Content-length", "0");
     int httpResponseCode = https.POST("");
     bool success = false;
     // Check if the request was successful
@@ -357,6 +388,7 @@ bool SpotifyHandler::skipBack()
     https.begin(url);
     String auth = "Bearer " + String(accessToken);
     https.addHeader("Authorization", auth);
+    https.addHeader("Content-length", "0");
     int httpResponseCode = https.POST("");
     bool success = false;
     // Check if the request was successful

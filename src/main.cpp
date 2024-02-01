@@ -124,7 +124,7 @@ void buttonPress()
     slider.gotoPos(potiStorage);
     potiStorage = val;
 
-    spotifyHandler.adjustVolume(map(potiStorage,0,4096,0,100));
+    slider.gotoPos(map(spotifyHandler.getVolume(), 0, 100, 0, 4096));
 }
 
 void setup(void)
@@ -174,7 +174,7 @@ void loop()
         tft.setCursor(0, 10);
     }
 
-    server.handleClient();
+    if(!spotifyHandler.accessTokenSet) server.handleClient();
 
     int piezoVal = analogRead(GPIO_NUM_0);
 
@@ -188,7 +188,7 @@ void loop()
     if (time % 50 == 0)
     {
         int potiVal = slider.getVal();
-        if (potiVal < lastSliderVal - 5 || potiVal > lastSliderVal + 5)
+        if (potiVal < lastSliderVal - 20 || potiVal > lastSliderVal + 20)
         {
             lastSliderVal = potiVal;
             float cVal = map(potiVal, 0, 4096, 0, 100) / 100.f;
@@ -196,7 +196,7 @@ void loop()
             tft.fillRoundRect(map(potiVal, 0, 4096, 2, 238), 2, 238, 26, 4, TFT_BLACK);
             tft.fillRoundRect(2, 2, map(potiVal, 0, 4096, 2, 238), 26, 4, cVal > 0.5f ? TFT_GREEN : TFT_RED);
 
-            
+            spotifyHandler.adjustVolume(map(potiStorage,0,4096,0,100));
         }
     }
     delay(1);

@@ -18,6 +18,7 @@ public:
     bool getUserCode(String serverCode);
     bool refreshAuth();
     bool getTrackInfo();
+    int getVolume();
     bool findLikedStatus(String songId);
     bool drawScreen(bool fullRefresh = false, bool likeRefresh = false);
     bool togglePlay();

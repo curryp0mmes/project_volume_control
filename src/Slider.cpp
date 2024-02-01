@@ -36,17 +36,27 @@ void Slider::power(bool on) {
 }
 
 void Slider::gotoPos(int pos) {
-    if(pos > 4096) pos = 4096;
-    if(pos < 100) pos = 100;
+    int max = 4096;
+    int min = 300;
+    if(pos > max) {
+        gotoPos(max);
+        return;
+    }
+    if(pos < min) {
+        gotoPos(min);
+        return;
+    }
+
+    int stop = millis() + 1000;
 
     if(this->getVal() < pos) {
         analogWrite(pinMotor1, 255);
-        while(this->getValFast() < pos);
+        while(this->getValFast() < pos && millis() < stop);
         analogWrite(pinMotor1, 0);
     }
     else {
       analogWrite(pinMotor2, 255);
-      while(this->getValFast() > pos);
+      while(this->getValFast() > pos && millis() < stop);
       analogWrite(pinMotor2, 0);
     }
 }

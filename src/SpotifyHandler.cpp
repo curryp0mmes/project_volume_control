@@ -20,12 +20,12 @@ bool SpotifyHandler::getUserCode(String serverCode)
         tokenExpireTime = doc["expires_in"];
         tokenStartTime = millis();
         accessTokenSet = true;
-        tft.println(accessToken);
-        tft.println(refreshToken);
+        logger->consolePrintLn(accessToken);
+        logger->consolePrintLn(refreshToken);
     }
     else
     {
-        tft.println(https.getString());
+        logger->consolePrintLn(https.getString());
     }
     // Disconnect from the Spotify API
     https.end();
@@ -53,12 +53,12 @@ bool SpotifyHandler::refreshAuth()
         tokenExpireTime = doc["expires_in"];
         tokenStartTime = millis();
         accessTokenSet = true;
-        tft.println(accessToken);
-        tft.println(refreshToken);
+        logger->consolePrintLn(accessToken);
+        logger->consolePrintLn(refreshToken);
     }
     else
     {
-        tft.println(https.getString());
+        logger->consolePrintLn(https.getString());
     }
     // Disconnect from the Spotify API
     https.end();
@@ -112,7 +112,7 @@ bool SpotifyHandler::getTrackInfo()
         while (imageLink.indexOf("image") == -1)
         {
             String height = getValue(https, "height");
-            // tft.println(height);
+            // logger->consolePrintLn(height);
             if (height.toInt() > 300)
             {
                 imageLink = "";
@@ -120,9 +120,9 @@ bool SpotifyHandler::getTrackInfo()
             }
             imageLink = getValue(https, "url");
 
-            // tft.println(imageLink);
+            // logger->consolePrintLn(imageLink);
         }
-        // tft.println(imageLink);
+        // logger->consolePrintLn(imageLink);
 
         String albumName = getValue(https, "name");
         String artistName = getValue(https, "name");
@@ -132,10 +132,10 @@ bool SpotifyHandler::getTrackInfo()
         songId = getValue(https, "uri");
         String isPlay = getValue(https, "is_playing");
         isPlaying = isPlay == "true";
-        tft.println(isPlay);
-        // tft.println(songId);
+        logger->consolePrintLn(isPlay);
+        // logger->consolePrintLn(songId);
         songId = songId.substring(15, songId.length() - 1);
-        // tft.println(songId);
+        // logger->consolePrintLn(songId);
         https.end();
         // listSPIFFS();
         if (songId != currentSong.Id)
@@ -145,12 +145,11 @@ bool SpotifyHandler::getTrackInfo()
             {
                 SPIFFS.remove("/albumArt.jpg");
             }
-            // tft.println("trying to get album art");
+            // logger->consolePrintLn("trying to get album art");
             bool loaded_ok = getFile(imageLink.substring(1, imageLink.length() - 1).c_str(), "/albumArt.jpg"); // Note name preceded with "/"
-            tft.println("Image load was: ");
-            tft.println(loaded_ok);
+            logger->consolePrintLn("Image load was: ");
+            logger->consolePrintLn(String(loaded_ok));
             refresh = true;
-            tft.fillScreen(TFT_BLACK);
         }
         currentSong.album = albumName.substring(1, albumName.length() - 1);
         currentSong.artist = artistName.substring(1, artistName.length() - 1);
@@ -161,17 +160,16 @@ bool SpotifyHandler::getTrackInfo()
     }
     else
     {
-        tft.print("Error getting track info: ");
-        tft.println(httpResponseCode);
+        logger->consolePrint("Error getting track info: ");
+        logger->consolePrintLn(String(httpResponseCode));
         // String response = https.getString();
-        // tft.println(response);
+        // logger->consolePrintLn(response);
         https.end();
     }
 
     // Disconnect from the Spotify API
     if (success)
     {
-        drawScreen(refresh);
         lastSongPositionMs = currentSongPositionMs;
     }
     return success;
@@ -195,90 +193,16 @@ bool SpotifyHandler::findLikedStatus(String songId)
     }
     else
     {
-        tft.print("Error toggling liked songs: ");
-        tft.println(httpResponseCode);
+        logger->consolePrint("Error toggling liked songs: ");
+        logger->consolePrintLn(String(httpResponseCode));
         String response = https.getString();
-        tft.println(response);
+        logger->consolePrintLn(response);
         https.end();
     }
 
     // Disconnect from the Spotify API
 
     return success;
-}
-bool SpotifyHandler::drawScreen(bool fullRefresh, bool likeRefresh)
-{
-    int rectWidth = 120;
-    int rectHeight = 10;
-    if (fullRefresh)
-    {
-        if (SPIFFS.exists("/albumArt.jpg") == true)
-        {
-            TJpgDec.setSwapBytes(true);
-            TJpgDec.setJpgScale(4);
-            TJpgDec.drawFsJpg(26, 5, "/albumArt.jpg");
-        }
-        else
-        {
-            TJpgDec.setSwapBytes(false);
-            TJpgDec.setJpgScale(1);
-            TJpgDec.drawFsJpg(0, 0, "/Angry.jpg");
-        }
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextWrap(true);
-        tft.setCursor(0, 85);
-        tft.print(currentSong.artist);
-        // tft.drawString(currentSong.artist, tft.width() / 2, 10);
-        tft.setCursor(0, 110);
-
-        tft.print(currentSong.song);
-        // tft.print(currentSong.song);
-        // tft.drawString(currentSong.song, tft.width() / 2, 115);
-        // tft.drawString(currentSong.song, tft.width() / 2, 125);
-
-        tft.drawRoundRect(
-            tft.width() / 2 - rectWidth / 2,
-            140,
-            rectWidth,
-            rectHeight,
-            4,
-            TFT_DARKGREEN);
-    }
-    if (fullRefresh || likeRefresh)
-    {
-        if (currentSong.isLiked)
-        {
-            TJpgDec.setJpgScale(1);
-            TJpgDec.drawFsJpg(128 - 20, 0, "/heart.jpg");
-            //    tft.fillCircle(128-10,10,10,TFT_GREEN);
-        }
-        else
-        {
-            tft.fillRect(128 - 21, 0, 21, 21, TFT_BLACK);
-        }
-    }
-    if (lastSongPositionMs > currentSongPositionMs)
-    {
-        tft.fillSmoothRoundRect(
-            tft.width() / 2 - rectWidth / 2 + 2,
-            140 + 2,
-            rectWidth - 4,
-            rectHeight - 4,
-            10,
-            TFT_BLACK);
-        lastSongPositionMs = currentSongPositionMs;
-    }
-    tft.fillSmoothRoundRect(
-        tft.width() / 2 - rectWidth / 2 + 2,
-        140 + 2,
-        rectWidth * (currentSongPositionMs / currentSong.durationMs) - 4,
-        rectHeight - 4,
-        10,
-        TFT_GREEN);
-    // tft.println(currentSongPositionMs);
-    // tft.println(currentSong.durationMs);
-    // tft.println(currentSongPositionMs/currentSong.durationMs);
-    return true;
 }
 
 bool SpotifyHandler::togglePlay()
@@ -295,15 +219,15 @@ bool SpotifyHandler::togglePlay()
     if (httpResponseCode == 204)
     {
         // String response = https.getString();
-        tft.println((isPlaying ? "Playing" : "Pausing"));
+        logger->consolePrintLn((isPlaying ? "Playing" : "Pausing"));
         success = true;
     }
     else
     {
-        tft.print("Error pausing or playing: ");
-        tft.println(httpResponseCode);
+        logger->consolePrint("Error pausing or playing: ");
+        logger->consolePrintLn(String(httpResponseCode));
         String response = https.getString();
-        tft.println(response);
+        logger->consolePrintLn(response);
     }
 
     // Disconnect from the Spotify API
@@ -334,18 +258,18 @@ bool SpotifyHandler::adjustVolume(int vol)
     {
         currVol = vol;
         success = false;
-        tft.print("Error setting volume: ");
-        tft.println(httpResponseCode);
+        logger->consolePrint("Error setting volume: ");
+        logger->consolePrintLn(String(httpResponseCode));
         String response = https.getString();
-        tft.println(response);
+        logger->consolePrintLn(response);
     }
     else
     {
-        tft.print("Error setting volume: ");
-        tft.println(httpResponseCode);
+        logger->consolePrint("Error setting volume: ");
+        logger->consolePrintLn(String(httpResponseCode));
         String response = https.getString();
-        tft.println(response); 
-        tft.println(url);
+        logger->consolePrintLn(response); 
+        logger->consolePrintLn(url);
     }
 
     // Disconnect from the Spotify API
@@ -366,15 +290,15 @@ bool SpotifyHandler::skipForward()
     if (httpResponseCode == 204)
     {
         // String response = https.getString();
-        tft.println("skipping forward");
+        logger->consolePrintLn("skipping forward");
         success = true;
     }
     else
     {
-        tft.print("Error skipping forward: ");
-        tft.println(httpResponseCode);
+        logger->consolePrint("Error skipping forward: ");
+        logger->consolePrintLn(String(httpResponseCode));
         String response = https.getString();
-        tft.println(response);
+        logger->consolePrintLn(response);
     }
 
     // Disconnect from the Spotify API
@@ -395,15 +319,15 @@ bool SpotifyHandler::skipBack()
     if (httpResponseCode == 204)
     {
         // String response = https.getString();
-        tft.println("skipping backward");
+        logger->consolePrintLn("skipping backward");
         success = true;
     }
     else
     {
-        tft.print("Error skipping backward: ");
-        tft.println(httpResponseCode);
+        logger->consolePrint("Error skipping backward: ");
+        logger->consolePrintLn(String(httpResponseCode));
         String response = https.getString();
-        tft.println(response);
+        logger->consolePrintLn(response);
     }
 
     // Disconnect from the Spotify API
@@ -416,31 +340,31 @@ bool SpotifyHandler::getFile(String url, String filename) {
 
   // If it exists then no need to fetch it
   if (SPIFFS.exists(filename) == true) {
-    tft.println("Found " + filename);
+    logger->consolePrintLn("Found " + filename);
     return 0;
   }
 
-  tft.println("Downloading "  + filename + " from " + url);
+  logger->consolePrintLn("Downloading "  + filename + " from " + url);
 
   // Check WiFi connection
   if ((WiFi.status() == WL_CONNECTED)) {
 
-    tft.print("[HTTP] begin...\n");
+    logger->consolePrint("[HTTP] begin...\n");
 
     HTTPClient http;
     http.begin(url);
 
-    tft.print("[HTTP] GET...\n");
+    logger->consolePrint("[HTTP] GET...\n");
     // Start connection and send HTTP header
     int httpCode = http.GET();
     if (httpCode > 0) {
       fs::File f = SPIFFS.open(filename, "w+");
       if (!f) {
-        tft.println("file open failed");
+        logger->consolePrintLn("file open failed");
         return 0;
       }
       // HTTP header has been send and Server response header has been handled
-      tft.printf("[HTTP] GET... code: %d\n", httpCode);
+      logger->consolePrintLn("[HTTP] GET... code: " + String(httpCode, DEC));
 
       // File found at server
       if (httpCode == HTTP_CODE_OK) {
@@ -474,13 +398,13 @@ bool SpotifyHandler::getFile(String url, String filename) {
           }
           yield();
         }
-        tft.println();
-        tft.print("[HTTP] connection closed or file end.\n");
+        logger->consolePrintLn("");
+        logger->consolePrintLn("[HTTP] connection closed or file end.");
       }
       f.close();
     }
     else {
-      tft.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      logger->consolePrintLn("[HTTP] GET... failed, error: " + String(http.errorToString(httpCode).c_str()));
     }
     http.end();
   }
@@ -497,8 +421,8 @@ String SpotifyHandler::getValue(HTTPClient &http, String key) {
   WiFiClient * stream = http.getStreamPtr();
   while (http.connected() && (len > 0 || len == -1)) {
     size_t size = stream->available();
-    // tft.print("Size: ");
-    // tft.println(size);
+    // logger->consolePrint("Size: ");
+    // logger->consolePrintLn(size);
     if (size) {
       int c = stream->readBytes(char_buff, ((size > sizeof(char_buff)) ? sizeof(char_buff) : size));
       if (found) {
@@ -515,8 +439,8 @@ String SpotifyHandler::getValue(HTTPClient &http, String key) {
             break;
         }
           
-        // tft.print("get: ");
-        // tft.println(get);
+        // logger->consolePrint("get: ");
+        // logger->consolePrintLn(get);
       }
       else if ((!look) && (char_buff[0] == key[0])) {
         look = true;
@@ -530,9 +454,9 @@ String SpotifyHandler::getValue(HTTPClient &http, String key) {
       }
     }
   }
-//   tft.println(*(ret_str.end()));
-//   tft.println(*(ret_str.end()-1));
-//   tft.println(*(ret_str.end()-2));
+//   logger->consolePrintLn(*(ret_str.end()));
+//   logger->consolePrintLn(*(ret_str.end()-1));
+//   logger->consolePrintLn(*(ret_str.end()-2));
   if(*(ret_str.end()-1) == ','){
     ret_str = ret_str.substring(0,ret_str.length()-1);
   }

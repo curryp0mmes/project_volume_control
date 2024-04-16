@@ -117,10 +117,11 @@ void buttonPress()
 
     piezoToggle = !piezoToggle;
     //tft.fillCircle(120, 180, 60, piezoToggle ? TFT_RED : TFT_GREEN);
-    slider.vibrate();
+    //slider.vibrate();
     int val = slider.getVal();
-    delay(1000);
-    slider.gotoPos(potiStorage);
+
+    //slider.gotoPos(potiStorage);
+    slider.gotoPos(1500);
     potiStorage = val;
 
     //slider.gotoPos(map(spotify.getVolume(), 0, 100, 0, 4096));
@@ -159,7 +160,9 @@ void setup(void)
             yield(); // Stay here twiddling thumbs waiting
     }
 
-    
+    int* bounds = slider.calibrate();
+    logger.consolePrintLn("LO: " + String(bounds[0]) + " HI: " + String(bounds[1]));
+    delete(bounds);
 
     connectToWifi();
 
@@ -208,7 +211,8 @@ void loop()
             timePiezo = time;
             buttonPress();
         }
+
+        slider.update();
     }
 
-    slider.update();
 }

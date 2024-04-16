@@ -1,4 +1,5 @@
 #include "Slider.h"
+#include "Logger.h"
 
 
 Slider::Slider(int pinMotor1, int pinMotor2, int pinPotiVal, int pinPotiSwitch) 
@@ -10,7 +11,8 @@ Slider::Slider(int pinMotor1, int pinMotor2, int pinPotiVal, int pinPotiSwitch)
     digitalWrite(pinPotiOn, HIGH);
     analogWrite(pinMotor1, 0);
     analogWrite(pinMotor2, 0);
-
+    pidController.setActivityTimeout(0.2);
+    pidController.setMaxOutput(255);
 
 }
 
@@ -29,8 +31,7 @@ void Slider::vibrate() {
 
 void Slider::power(bool on) {
     digitalWrite(pinPotiOn, on);
-    analogWrite(pinMotor1, 0);
-    analogWrite(pinMotor2, 0);
+    setMotor(0);
 
     if(on) {
 
@@ -38,14 +39,12 @@ void Slider::power(bool on) {
 }
 
 void Slider::gotoPos(int pos) {
-    int max = 4096;
-    int min = 300;
-    if(pos > max) {
-        gotoPos(max);
+    if(pos > upper_bound) {
+        gotoPos(upper_bound);
         return;
     }
-    if(pos < min) {
-        gotoPos(min);
+    if(pos < lower_bound) {
+        gotoPos(lower_bound);
         return;
     }
 
@@ -70,18 +69,56 @@ int Slider::getValFast() {
 
 void Slider::update() {
     if(!atTarget) {
-        float result = pidController.update(getValFast());
+        lastPowerVal = pidController.update(getVal()) * (reversed ? -1.f : 1.f);
 
-        if(result < 0) {
-            analogWrite(pinMotor1, 0);
-            analogWrite(pinMotor2, (int) -result);
-        }
-        else {
-            analogWrite(pinMotor2, 0);
-            analogWrite(pinMotor1, (int) result);
-        }
+        setMotor(lastPowerVal);
 
+        if(lastPowerVal == 0) atTarget = true;
+    }
+}
 
-        if(result == 0) atTarget = true;
+int* Slider::calibrate() {
+    setMotor(-255);
+    delay(300);
+    setMotor(0);
+    delay(100);
+    int val1 = getVal();
+    lower_bound = val1;
+    upper_bound = val1;
+
+    setMotor(255);
+    delay(300);
+    setMotor(0);
+    delay(100);
+    int val2 = getVal();
+    if(val2 < lower_bound) {
+        lower_bound = val2;
+        reversed = true;
+    }
+    if(val2 > upper_bound) {
+        upper_bound = val2;
+        reversed = false;
+    }
+
+    int* out = (int*) (malloc(sizeof(int) * 2));
+    out[0] = lower_bound;
+    out[1] = upper_bound;
+    return out;
+}
+
+void Slider::setMotor(float val) {
+    if(val == 0) {
+        analogWrite(pinMotor1, 0);
+        analogWrite(pinMotor2, 0);
+    }
+    else if(val < 0) {
+        int mapped = map((-1) * (int)val, 0, 255, 110, 255);
+        analogWrite(pinMotor1, 0);
+        analogWrite(pinMotor2, mapped);
+    }
+    else {
+        int mapped = map((int)val, 0, 255, 110, 255);
+        analogWrite(pinMotor2, 0);
+        analogWrite(pinMotor1, mapped);
     }
 }

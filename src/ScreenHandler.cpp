@@ -65,6 +65,12 @@ void ScreenHandler::drawSliderPage() {
         tft.setTextSize(1);
         needsRedraw = false;
     }
+
+
+    tft.fillRect(150,150,50,50, TFT_DARKGREEN);
+    tft.setCursor(150,150);
+    tft.print(slider->lastPowerVal);
+
     tft.fillRoundRect(map(slider->getVal(), 0, 4096, 2, 238), 102, 238, 26, 4, TFT_BLACK);
     tft.fillRoundRect(2, 102, map(slider->getVal(), 0, 4096, 2, 238), 26, 4, slider->getVal() > 2048 ? TFT_GREEN : TFT_RED);
 }

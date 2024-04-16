@@ -10,6 +10,8 @@ Slider::Slider(int pinMotor1, int pinMotor2, int pinPotiVal, int pinPotiSwitch)
     digitalWrite(pinPotiOn, HIGH);
     analogWrite(pinMotor1, 0);
     analogWrite(pinMotor2, 0);
+
+
 }
 
 void Slider::vibrate() {
@@ -47,18 +49,9 @@ void Slider::gotoPos(int pos) {
         return;
     }
 
-    int stop = millis() + 1000;
 
-    if(this->getVal() < pos) {
-        analogWrite(pinMotor1, 255);
-        while(this->getValFast() < pos && millis() < stop);
-        analogWrite(pinMotor1, 0);
-    }
-    else {
-      analogWrite(pinMotor2, 255);
-      while(this->getValFast() > pos && millis() < stop);
-      analogWrite(pinMotor2, 0);
-    }
+    pidController.setSetpoint(pos);
+    atTarget = false;
 }
 
 int Slider::getVal() {
@@ -73,4 +66,22 @@ int Slider::getVal() {
 
 int Slider::getValFast() {
     return analogRead(pinPotiVal);
+}
+
+void Slider::update() {
+    if(!atTarget) {
+        float result = pidController.update(getValFast());
+
+        if(result < 0) {
+            analogWrite(pinMotor1, 0);
+            analogWrite(pinMotor2, (int) -result);
+        }
+        else {
+            analogWrite(pinMotor2, 0);
+            analogWrite(pinMotor1, (int) result);
+        }
+
+
+        if(result == 0) atTarget = true;
+    }
 }

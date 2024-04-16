@@ -27,7 +27,9 @@
 
 
 unsigned long timePiezo;
-unsigned long timeLastScreenDraw;
+unsigned long time2Hz;
+unsigned long time10Hz;
+unsigned long time100Hz;
 bool piezoToggle = false;
 int maxVal = 0;
 int lastSliderVal = 0;
@@ -169,38 +171,44 @@ void setup(void)
     //tft.fillRect(0, 0, 240, 30, TFT_WHITE);
 
     timePiezo = millis();
-    timeLastScreenDraw = millis();
+    time2Hz = millis();
+    time10Hz = millis();
+    time100Hz = millis();
 }
 
 void loop()
 {
     unsigned long time = millis();
-    if((time - timeLastScreenDraw) > 50) {
-        timeLastScreenDraw = time;
-        screen.drawScreen();
-    }
+    if((time - time2Hz) > (1000 / 2)) {
+        time2Hz = time;
 
-    if(!spotify.accessTokenSet) server.handleClient();
+        /// 2 times per second
 
-    int piezoVal = analogRead(GPIO_NUM_0);
-    
-    if (piezoVal > 1000 && (time - timePiezo) > 100)
-    {
-        timePiezo = time;
-        buttonPress();
-    }
-
-    if (time % 500 == 0)
-    {
         int potiVal = slider.getVal();
         logger.consolePrintLn(String(potiVal));
-        if (potiVal < lastSliderVal - 20 || potiVal > lastSliderVal + 20)
-        {
-            lastSliderVal = potiVal;
-            float cVal = map(potiVal, 0, 4096, 0, 100) / 100.f;
+    }
 
-            spotify.adjustVolume(map(potiVal,0,4096,0,100));
+    if((time - time10Hz) > (1000 / 10)) {
+        time10Hz = time;
+
+        /// 10 times per second
+        screen.drawScreen();
+        if(!spotify.accessTokenSet) server.handleClient();
+    }
+
+    if((time - time100Hz) > (1000 / 100)) {
+        time100Hz = time;
+
+        /// (up to) 100 times per second
+
+        /// Button press
+        int piezoVal = analogRead(GPIO_NUM_0);
+        if (piezoVal > 1000 && (time - timePiezo) > 2000)
+        {
+            timePiezo = time;
+            buttonPress();
         }
     }
-    delay(1);
+
+    slider.update();
 }

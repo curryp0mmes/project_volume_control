@@ -1,6 +1,5 @@
 #include "ScreenHandler.h"
 
-
 void ScreenHandler::setup(Logger* loggerRef, SpotifyHandler* spotifyRef, Slider* sliderRef) {
     logger = loggerRef;
     spotify = spotifyRef;
@@ -39,6 +38,8 @@ void ScreenHandler::drawScreen() {
 void ScreenHandler::drawConsolePage() {
     if(logger->update || needsRedraw) {
         tft.fillScreen(TFT_BLACK);
+        tft.setCursor(200,0);
+        tft.print(String(currentPage) + "/3");
         tft.setCursor(0,0);
         tft.setTextSize(2);
         tft.println("Console");
@@ -56,6 +57,8 @@ void ScreenHandler::drawConsolePage() {
 void ScreenHandler::drawSliderPage() {
     if(needsRedraw) {
         tft.fillScreen(TFT_BLACK);
+        tft.setCursor(200,0);
+        tft.print(String(currentPage) + "/3");
         tft.setCursor(0,0);
         tft.setTextSize(2);
         tft.println("Slider");
@@ -75,6 +78,10 @@ bool ScreenHandler::drawSpotifyPage(bool fullRefresh, bool likeRefresh)
 {
     if(needsRedraw) {
         tft.fillScreen(TFT_BLACK);
+        tft.setCursor(200,0);
+        tft.print(String(currentPage) + "/3");
+
+        //draw the spotify logo
         tft.fillSmoothCircle(12,12,10,TFT_DARKGREEN,TFT_BLACK);
         tft.drawSmoothArc(12,25,18,16,160,200,TFT_BLACK,TFT_DARKGREEN, true);
         tft.drawSmoothArc(12,29,18,16,160,200,TFT_BLACK,TFT_DARKGREEN, true);
@@ -83,13 +90,19 @@ bool ScreenHandler::drawSpotifyPage(bool fullRefresh, bool likeRefresh)
         needsRedraw = false;
     }
 
+    if (!spotify->accessTokenSet)
+    {
+        tft.setCursor(10,100);
+        tft.print("Please Log in at http://" + WiFi.localIP().toString());
         return true;
+    }
+    
 
     int rectWidth = 120;
     int rectHeight = 10;
     if (fullRefresh)
     {
-        if (SPIFFS.exists("/albumArt.jpg") == true)
+        if (SPIFFS.exists("/albumArt.jpg"))
         {
             TJpgDec.setSwapBytes(true);
             TJpgDec.setJpgScale(4);
@@ -104,11 +117,11 @@ bool ScreenHandler::drawSpotifyPage(bool fullRefresh, bool likeRefresh)
         tft.setTextDatum(MC_DATUM);
         tft.setTextWrap(true);
         tft.setCursor(0, 85);
-        //tft.print(currentSong.artist);
+        tft.print(spotify->currentSong.artist);
         // tft.drawString(currentSong.artist, tft.width() / 2, 10);
         tft.setCursor(0, 110);
 
-        //tft.print(currentSong.song);
+        tft.print(spotify->currentSong.song);
         // tft.print(currentSong.song);
         // tft.drawString(currentSong.song, tft.width() / 2, 115);
         // tft.drawString(currentSong.song, tft.width() / 2, 125);
@@ -123,7 +136,7 @@ bool ScreenHandler::drawSpotifyPage(bool fullRefresh, bool likeRefresh)
     }
     if (fullRefresh || likeRefresh)
     {
-        if (true)//currentSong.isLiked)
+        if (spotify->currentSong.isLiked)
         {
             TJpgDec.setJpgScale(1);
             TJpgDec.drawFsJpg(128 - 20, 0, "/heart.jpg");
@@ -134,7 +147,7 @@ bool ScreenHandler::drawSpotifyPage(bool fullRefresh, bool likeRefresh)
             tft.fillRect(128 - 21, 0, 21, 21, TFT_BLACK);
         }
     }
-    if (true) //lastSongPositionMs > currentSongPositionMs)
+    if (spotify->lastSongPositionMs > spotify->currentSongPositionMs)
     {
         tft.fillSmoothRoundRect(
             tft.width() / 2 - rectWidth / 2 + 2,
@@ -143,12 +156,12 @@ bool ScreenHandler::drawSpotifyPage(bool fullRefresh, bool likeRefresh)
             rectHeight - 4,
             10,
             TFT_BLACK);
-        //lastSongPositionMs = currentSongPositionMs;
+        spotify->lastSongPositionMs = spotify->currentSongPositionMs;
     }
     tft.fillSmoothRoundRect(
         tft.width() / 2 - rectWidth / 2 + 2,
         140 + 2,
-        rectWidth, //* (currentSongPositionMs / currentSong.durationMs) - 4,
+        rectWidth * (spotify->currentSongPositionMs / spotify->currentSong.durationMs) - 4,
         rectHeight - 4,
         10,
         TFT_GREEN);

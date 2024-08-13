@@ -11,8 +11,6 @@ Slider::Slider(int pinMotor1, int pinMotor2, int pinPotiVal, int pinPotiSwitch)
     digitalWrite(pinPotiOn, HIGH);
     analogWrite(pinMotor1, 0);
     analogWrite(pinMotor2, 0);
-    pidController.setActivityTimeout(0.2);
-    pidController.setMaxOutput(255);
 
 }
 
@@ -69,7 +67,7 @@ int Slider::getValFast() {
 
 void Slider::update() {
     if(!atTarget) {
-        lastPowerVal = pidController.update(getVal()) * (reversed ? -1.f : 1.f);
+        lastPowerVal = pidController.update(getVal(), millis()) * (reversed ? -1.f : 1.f);
 
         setMotor(lastPowerVal);
 
@@ -121,4 +119,17 @@ void Slider::setMotor(float val) {
         analogWrite(pinMotor2, 0);
         analogWrite(pinMotor1, mapped);
     }
+}
+
+void Slider::setPID(float p, float i, float d) {
+    pidController.setKp(p);
+    pidController.setKi(i);
+    pidController.setKd(d);
+
+    atTarget = true;
+    setMotor(-255);
+    delay(300);
+    setMotor(0);
+
+    gotoPos(1500);
 }

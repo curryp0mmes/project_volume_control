@@ -69,7 +69,17 @@ void handleCallbackPage() {
     }
 }
 
+void handlePIDPage() {
 
+    server.send(200, "text/html", String(pidPage)); //Send web page
+
+    String p = server.arg("s1val");
+    String i = server.arg("s2val");
+    String d = server.arg("s3val");
+    if (p != "" && i != "" && d != ""){     //Parameters found
+        slider.setPID(p.toFloat(),i.toFloat(),d.toFloat());
+    }
+}
 
 void printWifiStatus()
 {
@@ -168,15 +178,17 @@ void setup(void)
 
     server.on("/", handleRoot);      //Which routine to handle at root location
     server.on("/callback", handleCallbackPage);      //Which routine to handle at root location
+    server.on("/pid", handlePIDPage);      //Which routine to handle at root location
     server.begin();                  //Start server
 
 
     //tft.fillRect(0, 0, 240, 30, TFT_WHITE);
 
-    timePiezo = millis();
-    time2Hz = millis();
-    time10Hz = millis();
-    time100Hz = millis();
+    unsigned long time = millis();
+    timePiezo = time;
+    time2Hz = time;
+    time10Hz = time;
+    time100Hz = time;
 }
 
 void loop()
